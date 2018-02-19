@@ -11,12 +11,14 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+
 import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        // Retrofit retrofit = new Retrofit.Builder().baseUrl()
+        // Retrofit retrofit = new Retrofit.Builder().baseUrl();
 
         mProgress.show();
 
@@ -72,7 +74,42 @@ public class MainActivity extends AppCompatActivity {
 
         clientInterfaceApi = retrofit.create(ClientInterfaceApi.class);
 
-        Call<JsonResponse> call = clientInterfaceApi.getDetails();
+
+
+        //----------------------RxJava Method to parse JSON API-------------
+       Observable<JsonResponse> observable = clientInterfaceApi.getDetails()
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        observable.subscribe(new Observer<JsonResponse>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(JsonResponse jsonResponse) {
+
+                countries = jsonResponse.getWorldpopulation();
+                mAdapter = new RecyclerAdapter(countries,MainActivity.this);
+                mRecyclerView.setAdapter(mAdapter);
+                mProgress.dismiss();
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+
+        //----------------Call Method to parse JSON API--------------
+       /* Call<JsonResponse> call = clientInterfaceApi.getDetails();
 
         call.enqueue(new Callback<JsonResponse>() {
             @Override
@@ -100,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<JsonResponse> call, Throwable t) {
 
             }
-        });
+        });*/
 
 
     }
